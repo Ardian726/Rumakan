@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Products;
 use Illuminate\Http\Request;
 use App\Models\ProductCategories;
-use App\Models\Products;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class ProductsController extends Controller
 {
     public function index()
     {
+        // Mengambil semua kategori dan produk dengan relasi kategori
         $categories = ProductCategories::all();
         $products = Products::with('category')->get();
         return view('products', compact('products', 'categories'));
@@ -17,7 +20,9 @@ class ProductsController extends Controller
 
     public function create()
     {
-        //
+        // Mengirimkan kategori ke view create
+        $categories = ProductCategories::all();
+        return view('products.create', compact('categories'));
     }
 
     public function store(Request $request)
@@ -28,18 +33,43 @@ class ProductsController extends Controller
             'description' => 'required',
             'price' => 'required|numeric',
             'stock_quantity' => 'required|integer',
-            'image1_url' => 'required|max:255',
+            'image1_url' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            'image2_url' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'image3_url' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'image4_url' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'image5_url' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
-        Products::create($request->all());
-        return redirect()->route('products.index')->with('success', 'Product created successfully!');
+        try {
+            // Menyimpan gambar-gambar produk
+            $imagePaths = [];
+            for ($i = 1; $i <= 5; $i++) {
+                $field = "image{$i}_url";
+                if ($request->hasFile($field)) {
+                    $imagePaths[$field] = $request->file($field)->store('products', 'public');
+                } else {
+                    $imagePaths[$field] = null;
+                }
+            }
+
+            // Menyimpan produk ke dalam database
+            DB::transaction(function () use ($request, $imagePaths) {
+                Products::create(array_merge($request->except(['image1_url', 'image2_url', 'image3_url', 'image4_url', 'image5_url']), $imagePaths));
+            });
+
+            return redirect()->route('products.index')->with('success', 'Berhasil menambahkan produk!');
+        } catch (\Throwable $th) {
+            report($th);
+            return redirect()->back()->withErrors(['error' => 'Terjadi kesalahan saat menyimpan data.'])->withInput();
+        }
     }
 
     public function edit($id)
     {
+        // Mengambil data produk dan kategori
         $products = Products::findOrFail($id);
         $categories = ProductCategories::all();
-        return view('products', compact('products', 'categories'));
+        return view('products.edit', compact('products', 'categories'));
     }
 
     public function update(Request $request, $id)
@@ -52,17 +82,48 @@ class ProductsController extends Controller
             'description' => 'required',
             'price' => 'required|numeric',
             'stock_quantity' => 'required|integer',
-            'image1_url' => 'required|max:255',
+            'image1_url' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            'image2_url' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'image3_url' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'image4_url' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'image5_url' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
-        $products->update($request->all());
-        return redirect()->route('products.index')->with('success', 'Product updated successfully!');
+        try {
+            // Memproses gambar baru dan menghapus gambar lama jika ada perubahan
+            $imagePaths = [];
+            for ($i = 1; $i <= 5; $i++) {
+                $field = "image{$i}_url";
+                if ($request->hasFile($field)) {
+                    if ($products->{$field}) {
+                        Storage::disk('public')->delete($products->{$field});
+                    }
+                    $imagePaths[$field] = $request->file($field)->store('products', 'public');
+                } else {
+                    $imagePaths[$field] = $products->{$field};
+                }
+            }
+
+            // Update data produk
+            $products->update(array_merge($request->except(['image1_url', 'image2_url', 'image3_url', 'image4_url', 'image5_url']), $imagePaths));
+
+            return redirect()->route('products.index')->with('success', 'Berhasil memperbarui produk!');
+        } catch (\Throwable $th) {
+            report($th);
+            return redirect()->back()->withErrors(['error' => 'Terjadi kesalahan saat memperbarui data.'])->withInput();
+        }
     }
 
     public function destroy($id)
     {
         $products = Products::findOrFail($id);
-        $products->delete();
-        return redirect()->route('products.index')->with('success', 'Product deleted successfully!');
+
+        try {
+            $products->delete();
+            return redirect()->route('products.index')->with('success', 'Berhasil menghapus produk!');
+        } catch (\Throwable $th) {
+            report($th);
+            return redirect()->back()->withErrors(['error' => 'Terjadi kesalahan saat menghapus data.']);
+        }
     }
 }
