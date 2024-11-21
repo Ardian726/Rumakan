@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\CustomersController;
+use App\Http\Controllers\DiscountsController;
 use App\Http\Controllers\ProductCategoriesController;
 use App\Http\Controllers\DiscountCategoriesController;
 
@@ -60,6 +61,14 @@ Route::prefix('products')->group(function () {
     Route::delete('/{id}', [ProductsController::class, 'destroy'])->name('products.destroy');
 });
 
+Route::prefix('discounts')->name('discounts.')->group(function () {
+    Route::get('/', [DiscountsController::class, 'index'])->name('index');
+    Route::get('/create', [DiscountsController::class, 'create'])->name('create');
+    Route::post('/', [DiscountsController::class, 'store'])->name('store');
+    Route::get('/{id}/edit', [DiscountsController::class, 'edit'])->name('edit');
+    Route::put('/{id}', [DiscountsController::class, 'update'])->name('update');
+    Route::delete('/{id}', [DiscountsController::class, 'destroy'])->name('destroy');
+});
 
 
 

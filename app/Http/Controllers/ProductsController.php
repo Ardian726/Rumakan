@@ -69,7 +69,7 @@ class ProductsController extends Controller
         // Mengambil data produk dan kategori
         $products = Products::findOrFail($id);
         $categories = ProductCategories::all();
-        return view('products.edit', compact('products', 'categories'));
+        return view('products', compact('products', 'categories'));
     }
 
     public function update(Request $request, $id)
@@ -82,7 +82,7 @@ class ProductsController extends Controller
             'description' => 'required',
             'price' => 'required|numeric',
             'stock_quantity' => 'required|integer',
-            'image1_url' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            'image1_url' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'image2_url' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'image3_url' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'image4_url' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
@@ -90,7 +90,7 @@ class ProductsController extends Controller
         ]);
 
         try {
-            // Memproses gambar baru dan menghapus gambar lama jika ada perubahan
+            // Memproses gambar baru dan mempertahankan gambar lama jika tidak diunggah
             $imagePaths = [];
             for ($i = 1; $i <= 5; $i++) {
                 $field = "image{$i}_url";
@@ -104,8 +104,10 @@ class ProductsController extends Controller
                 }
             }
 
-            // Update data produk
-            $products->update(array_merge($request->except(['image1_url', 'image2_url', 'image3_url', 'image4_url', 'image5_url']), $imagePaths));
+            $products->update(array_merge(
+                $request->except(['image1_url', 'image2_url', 'image3_url', 'image4_url', 'image5_url']),
+                $imagePaths
+            ));
 
             return redirect()->route('products.index')->with('success', 'Berhasil memperbarui produk!');
         } catch (\Throwable $th) {
@@ -113,6 +115,7 @@ class ProductsController extends Controller
             return redirect()->back()->withErrors(['error' => 'Terjadi kesalahan saat memperbarui data.'])->withInput();
         }
     }
+
 
     public function destroy($id)
     {

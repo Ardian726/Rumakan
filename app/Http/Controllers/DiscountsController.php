@@ -2,17 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Discounts;
-use App\Models\DiscountCategories;
+use Carbon\Carbon;
 use App\Models\Products;
+use App\Models\Discounts;
 use Illuminate\Http\Request;
+use App\Models\DiscountCategories;
 
 class DiscountsController extends Controller
 {
     public function index()
     {
         $discounts = Discounts::with(['category', 'product'])->get();
-        return view('discounts', compact('discounts'));
+        $categories = DiscountCategories::all();
+        $products = Products::all();
+        return view('discounts', compact('discounts','categories', 'products'));
     }
 
     public function create()
@@ -28,14 +31,19 @@ class DiscountsController extends Controller
             'category_discount_id' => 'required|exists:discount_categories,id',
             'product_id' => 'required|exists:products,id',
             'start_date' => 'required|date',
-            'end_date' => 'required|date|after:start_date',
+            'end_date' => 'required|date',
             'percentage' => 'required|integer|min:1|max:100',
         ]);
 
-        Discounts::create($request->all());
+        $data = $request->all();
+        $data['start_date'] = Carbon::createFromFormat('m/d/Y', $request->start_date)->format('Y-m-d');
+        $data['end_date'] = Carbon::createFromFormat('m/d/Y', $request->end_date)->format('Y-m-d');
 
-        return redirect()->route('discount.index')->with('success', 'Discount created successfully.');
+        Discounts::create($data);
+
+        return redirect()->route('discounts.index')->with('success', 'Discount created successfully.');
     }
+
 
     public function edit($id)
     {
@@ -53,13 +61,13 @@ class DiscountsController extends Controller
             'category_discount_id' => 'required|exists:discount_categories,id',
             'product_id' => 'required|exists:products,id',
             'start_date' => 'required|date',
-            'end_date' => 'required|date|after:start_date',
+            'end_date' => 'required|date',
             'percentage' => 'required|integer|min:1|max:100',
         ]);
 
         $discounts->update($request->all());
 
-        return redirect()->route('discount.index')->with('success', 'Discount updated successfully.');
+        return redirect()->route('discounts.index')->with('success', 'Discount updated successfully.');
     }
 
     public function destroy($id)
@@ -67,6 +75,6 @@ class DiscountsController extends Controller
         $discounts = Discounts::findOrFail($id);
         $discounts->delete();
 
-        return redirect()->route('discount.index')->with('success', 'Discount deleted successfully.');
+        return redirect()->route('discounts.index')->with('success', 'Discount deleted successfully.');
     }
 }

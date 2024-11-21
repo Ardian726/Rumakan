@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('category_discount_id')->constrained('discount_categories');
             $table->foreignId('product_id')->constrained('products');
-            $table->dateTime('start_date');
-            $table->dateTime('end_date');
+            $table->date('start_date');
+            $table->date('end_date');
             $table->integer('percentage');
             $table->timestamps();
         });
