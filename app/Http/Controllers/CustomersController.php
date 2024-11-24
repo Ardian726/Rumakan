@@ -34,23 +34,31 @@ class CustomersController extends Controller
         // Buat token untuk API
         $token = $customers->createToken('auth_token')->plainTextToken;
 
-        return redirect()->route('welcome')->with('success', 'Registration successful');
+        return redirect('/home')->with('success', 'Registration successful');
     }
 
     public function login(Request $request)
     {
+        // Validasi input
         $request->validate([
             'email'    => 'required|email',
             'password' => 'required|string|min:8',
         ]);
 
+        // Ambil kredensial dari input
         $credentials = $request->only('email', 'password');
 
+        // Coba login dengan guard 'customers'
         if (Auth::guard('customers')->attempt($credentials)) {
-            return redirect()->route('welcome')->with('success', 'Login successful');
+            // Regenerasi session untuk keamanan
+            $request->session()->regenerate();
+
+            // Redirect ke halaman yang diinginkan
+            return redirect()->intended('/home')->with('success', 'Login successful');
         }
 
-        return redirect()->back()->withErrors(['message' => 'Invalid credentials']);
+        // Jika login gagal, kembalikan ke halaman sebelumnya dengan error
+        return redirect()->back()->withErrors(['message' => 'Invalid credentials'])->onlyInput('email');
     }
 
     public function logout(Request $request)
@@ -59,6 +67,6 @@ class CustomersController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('welcome');
+        return redirect('/home');
     }
 }
