@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ChartController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\ProfileController;
@@ -82,11 +83,10 @@ Route::post('/customers-register', [CustomersController::class, 'register'])->na
 Route::post('/customers-login', [CustomersController::class, 'login'])->name('customer.login');
 Route::post('/customers-logout', [CustomersController::class, 'logout'])->name('customer.logout')->middleware('auth:customers');
 
-Route::middleware('auth:customers')->group(function () {
-    Route::post('/wishlists/add', [WishlistsController::class, 'store'])->name('wishlists.add');
-});
+Route::post('/wishlists/add', [WishlistsController::class, 'store'])->name('wishlists.add');
 
-
+Route::post('/cart/add', [ChartController::class, 'addToCart'])->name('cart.add');
+Route::get('/chart', [ChartController::class, 'showChart'])->name('chart');
 
 // Route::prefix('products')->group(function () {
 //     Route::get('/', [HomeController::class, 'index']);

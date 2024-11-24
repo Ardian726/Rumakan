@@ -97,8 +97,8 @@
                                 @if ($item->discounts && $item->discounts->first())
                                     @php
                                         // Ambil nilai persentase diskon
-                                        $discountPercentage = $item->discounts->first()->percentage;
-                                        $discountedPrice = ($item->price * $discountPercentage) / 100;
+                                        $discountPercentage = $item->discounts->percentage;
+                                        $discountedPrice = $item->price - ($item->price * $discountPercentage) / 100;
                                     @endphp
                                     <div>
                                         <p class="text-sm/[5px] text-gray-500 mb-2 line-through dark:text-gray-400">

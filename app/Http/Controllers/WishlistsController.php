@@ -16,8 +16,10 @@ class WishlistsController extends Controller
 
         $customer = Auth::guard('customers')->user(); // Mendapatkan customer yang sedang login
 
-        if (!$customer) {
-            return redirect()->back()->with('error', 'Silakan login terlebih dahulu.');
+        if (!Auth::guard('customers')->check()) {
+            return redirect()->route('customers-login')->withErrors([
+                'message' => 'Silakan login untuk menambahkan produk ke keranjang.',
+            ]);
         }
 
         // Cek apakah produk sudah ada di wishlist

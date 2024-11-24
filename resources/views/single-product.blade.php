@@ -22,8 +22,8 @@
                         @if ($products->discounts && $products->discounts->first())
                             @php
                                 // Ambil nilai persentase diskon
-                                $discountPercentage = $products->discounts->first()->percentage;
-                                $discountedPrice = ($products->price * $discountPercentage) / 100;
+                                $discountPercentage = $products->discounts->percentage;
+                                $discountedPrice = $products->price - ($products->price * $discountPercentage) / 100;
                             @endphp
                             <div>
                                 <p class="text-sm/[5px] text-gray-500 mb-2 line-through dark:text-gray-400">
@@ -41,10 +41,24 @@
                     </div>
 
                     <div class="mt-6 sm:gap-4 sm:items-center sm:flex sm:mt-8">
-                        <form action="{{ route('wishlists.add') }}" method="POST">
-                            @csrf
-                            <input type="hidden" name="product_id" value="{{ $products->id }}">
-                            <button type="submit"
+                        @if (Auth::guard('customers')->check())
+                            <form method="POST" action="{{ route('wishlists.add') }}">
+                                @csrf
+                                <input type="hidden" name="product_id" value="{{ $products->id }}">
+                                <button type="submit"
+                                    class="flex items-center justify-center py-2.5 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
+                                    role="button">
+                                    <svg class="w-5 h-5 -ms-2 me-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                        width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M12.01 6.001C6.5 1 1 8 5.782 13.001L12.011 20l6.23-7C23 8 17.5 1 12.01 6.002Z" />
+                                    </svg>
+                                    Tambah ke Favorit
+                                </button>
+                            </form>
+                        @else
+                            <a href="{{ route('customers-login') }}"
                                 class="flex items-center justify-center py-2.5 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
                                 role="button">
                                 <svg class="w-5 h-5 -ms-2 me-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
@@ -54,19 +68,23 @@
                                         d="M12.01 6.001C6.5 1 1 8 5.782 13.001L12.011 20l6.23-7C23 8 17.5 1 12.01 6.002Z" />
                                 </svg>
                                 Tambah ke Favorit
+                            </a>
+                        @endif
+                        <form method="POST" action="{{ route('cart.add') }}">
+                            @csrf
+                            <input type="hidden" name="product_id" value="{{ $products->id }}">
+                            <input type="hidden" name="quantity" value="1">
+                            <button type="submit"
+                                class="text-white mt-4 sm:mt-0 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 flex items-center justify-center">
+                                <svg class="w-5 h-5 -ms-2 me-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                    width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M4 4h1.5L8 16m0 0h8m-8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm.75-3H7.5M11 7H6.312M17 4v6m-3-3h6" />
+                                </svg>
+                                Tambah ke keranjang
                             </button>
                         </form>
-
-                        <a href="#" title=""
-                            class="text-white mt-4 sm:mt-0 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 flex items-center justify-center"
-                            role="button">
-                            <svg class="w-5 h-5 -ms-2 me-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
-                                width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 4h1.5L8 16m0 0h8m-8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm.75-3H7.5M11 7H6.312M17 4v6m-3-3h6" />
-                            </svg>
-                            Tambah ke keranjang
-                        </a>
                     </div>
 
                     <hr class="my-6 md:my-8 border-gray-200 dark:border-gray-800" />
@@ -156,8 +174,8 @@
                                 @if ($item->discounts && $item->discounts->first())
                                     @php
                                         // Ambil nilai persentase diskon
-                                        $discountPercentage = $item->discounts->first()->percentage;
-                                        $discountedPrice = ($item->price * $discountPercentage) / 100;
+                                        $discountPercentage = $item->discounts->percentage;
+                                        $discountedPrice = $item->price - ($item->price * $discountPercentage) / 100;
                                     @endphp
                                     <div>
                                         <p class="text-sm/[5px] text-gray-500 mb-2 line-through dark:text-gray-400">

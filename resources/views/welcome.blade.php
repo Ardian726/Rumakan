@@ -59,7 +59,7 @@
 
                 <div class="flex items-center lg:space-x-2">
                     @if (Auth::guard('customers')->check())
-                        <a href="#"
+                        <a href="{{ route('chart') }}"
                             class="inline-flex items-center rounded-lg justify-center p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium leading-none text-gray-900 dark:text-white">
                             <span class="sr-only">
                                 Keranjang
